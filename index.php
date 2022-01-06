@@ -1,12 +1,14 @@
+<?php 
+
+session_start();
+
+?>
 <!DOCTYPE html>
 <html>
  <head>
  <title> Runtrack PHP - Jour 7</title>
  <meta name="viewport" content="width=device-width, initial-scale=0.5">
-
  </head>
- <body>
-
  <style> 
 
 p {
@@ -25,13 +27,36 @@ p {
     padding : 20px;
 }
 
-body{
+main{
     display : flex;
     flex-direction :row;
     justify-content : center;
     align-items: start;
     gap : 20px;
 }
+
+span {
+    font-size: 1em;
+    font-family:  monospace;
+}
+
+a{  
+    text-decoration: none;
+    font-size: 1em;
+    font-family:  monospace;
+}
+h2 { 
+    font-size: 1.5em;
+    font-family:  monospace;
+    line-height: 5px;
+}
+h3 { 
+    line-height: 5px;
+    font-size: 1.5em;
+    font-family:  monospace;
+    display: inline;
+}
+
 
 .game{
     display : flex;
@@ -162,7 +187,7 @@ body{
 }
 
 .text{
-    width : 440px;
+    width : 550px;
     height : 70px;
     background-color : darkslateblue;
     display : flex;
@@ -197,20 +222,53 @@ body{
     height : 30px;
     text-align :center;
 }
-</style>
+.divletter {
+    background-color: white;
+    font-family : monospace;
+    padding: 10px;
+    width: 25px;
+    height: 25px;
+    font-size: 2em;
+    text-align: center;
+}
+.divvic {
+    background-color: white;
+    font-family : monospace;
+    font-size: 1.5em;
+    text-align: center;
+}
 
+.divvic input {
+    font-family : monospace;
+    font-size: 1em;
+    padding: 5px;
+}
+#letter {
+    width: 30px; 
+}
+
+</style>
+ <body>
+    <main>
 <?php 
 
-session_start();
+if(isset($_SESSION['erreur'])){
+   // echo $_SESSION['erreur']; don't do nothing
+} else {
+    $_SESSION['erreur']=0;
+}
 
 // __________ declare WORDS __________ //
 
-$_SESSION["words"]=["CRABE","CRAYON","ARAIGNEE","TOURNEVIS","OLIVE"];
+$str = file_get_contents('mots.txt');
+$result = explode(' ',$str); 
+$result = $result[array_rand($result)];
+$_SESSION["words"]=$result;
 
 // __________ define current WORD __________ //
 
 if(!isset($_SESSION["display"])){
-    $_SESSION["Cword"] = str_split($_SESSION["words"][array_rand($_SESSION["words"],1)]);
+    $_SESSION["Cword"] = str_split($_SESSION["words"]);
     foreach($_SESSION["Cword"] as $word){
         $_SESSION["display"][]="";
     }
@@ -218,11 +276,39 @@ if(!isset($_SESSION["display"])){
 
 // __________Compare INPUT with WORD __________ //
 
+function cleanString($text) {
+    $utf8 = array(
+        '/[áàâãªä]/u'   =>   'a',
+        '/[ÁÀÂÃÄ]/u'    =>   'A',
+        '/[ÍÌÎÏ]/u'     =>   'I',
+        '/[íìîï]/u'     =>   'i',
+        '/[éèêë]/u'     =>   'e',
+        '/[ÉÈÊË]/u'     =>   'E',
+        '/[óòôõºö]/u'   =>   'o',
+        '/[ÓÒÔÕÖ]/u'    =>   'O',
+        '/[úùûü]/u'     =>   'u',
+        '/[ÚÙÛÜ]/u'     =>   'U',
+        '/ç/'           =>   'c',
+        '/Ç/'           =>   'C',
+        '/ñ/'           =>   'n',
+        '/Ñ/'           =>   'N',
+        '/–/'           =>   ' ', // UTF-8 hyphen to "normal" hyphen
+        '/[’‘‹›‚]/u'    =>   ' ', // Literally a single quote
+        '/[“”«»„]/u'    =>   ' ', // Double quote
+        '/ /'           =>   ' ', // nonbreaking space (equiv. to 0x160)
+    );
+    return preg_replace(array_keys($utf8), array_values($utf8), $text);
+}
+
+
+$i = 0;
+
 if(isset($_POST["letter"])){
-    $i = 0;
+    $letters=$_POST["letter"];
+    $letters=htmlspecialchars(cleanString($letters)); // some securities and change accented letters with not accented relatives etc..
     $OK = false;
     foreach($_SESSION["Cword"] as $wletter){
-        if(strtoupper($_POST["letter"]) == $wletter){
+        if(strtoupper($letters) == $wletter){
             $_SESSION["display"][$i] = $wletter;
             $OK = true;
         }
@@ -233,6 +319,7 @@ if(isset($_POST["letter"])){
     }
 }
 
+
 if($_SESSION['erreur']==6){
     $_SESSION["display"]=$_SESSION["Cword"];
 }
@@ -241,28 +328,87 @@ if($_SESSION['erreur']==6){
 
 if(isset($_POST["newgame"])||$_SESSION["erreur"] >6){
     session_destroy();
-    header('Location:hangman.php');
+    header('Location: index.php');
 }
 
 ?>
-<div class="TTC">  <div class='newgame'> 
-    <form method ="post" action="ttc.php">   
-        <input type='submit' value='TIC TAC TOE' name='newgame'> </input> 
-    </form>   
-</div> </div>
-
+<div class="TTC">  
+    <div class='newgame'> 
+        <form method ="post" action="">   
+                <input type="submit" value="ADMIN" name="admin" class="memory"> </input> 
+        </form> 
+    </div>
+</div>
 <div class="game">
-<div class='newgame'> 
-    <form method ="post">   
-        <input type='submit' value='NEW GAME' name='newgame'> </input> 
+<div class='newgame'>
+        <form method ="post">
+        <input type="text" name="letter" id ="letter" maxlength="1" >  </input> <!-- if we want to accept only alpha pattern="[A-Za-z]*" -->
     </form>   
 </div>
-<div class='text'> 
-    <form method ="post">
-        <input type='text' name='letter' id ='letter'>  </input> 
-    </form>   
-</div>
+<?php 
 
+
+// LOGIN "admin" PASSWORD "admin"   __________________________________________________________________________________ //
+
+
+if(isset($_POST['admin'])){
+    echo  '<div class="divvic"><form action="" method="post">
+            <input type="text" name="login" placeholder="login" required><br><br>
+            <input type="password" name="password" placeholder="password" required><br><br>
+            <input type="submit" name="enter" value="enter">
+        </form></div>';
+}
+if( (isset($_POST['login']) and !empty($_POST['login'])) and 
+    (isset($_POST['password']) and !empty($_POST['password'])) ){ 
+    $login=htmlspecialchars($_POST['login']);
+    $password=htmlspecialchars($_POST['password']);
+    if($login === 'admin' and $password === 'admin'){
+        echo '<a href="admin.php"><h1> go to the admin page here</h1></a>';
+    } else {
+        echo '<span>please fill in all the fields</span>';
+    }
+}
+
+// DEFAITE ______________________________________________________
+
+if($_SESSION['erreur']==6){
+    echo  '<div class="divvic"><h1>DÉFAITE !</h1><br>';
+    echo '<form method ="post" action="">   
+            <input type="submit" value="PLAY AGAIN" name="newgame" class="memory"> </input> 
+        </form></div>';
+}
+
+// VICTOIRE _____________________________________________________
+
+$k=0;
+$cword= (sizeof($_SESSION['Cword'])) -1 ;
+for($n = 0; $n<=$cword;$n++){
+    if($_SESSION['display'][$n] == $_SESSION['Cword'][$n]){
+        $k++;
+    }
+}
+
+
+if($k == ($cword + 1) and $_SESSION["erreur"]<6){
+    echo '<div class="divvic"><h1>Victoire</h1>';
+     echo '<form method ="post" action="">   
+            <input type="submit" value="PLAY AGAIN" name="newgame" class="memory"> </input>
+        </form></div> ';
+}
+
+// LETTERS ALREADY TRIED__________________________________________
+
+if(isset($_POST['letter'])){
+    $_SESSION['options'][]= $_POST['letter'];
+    echo '<h2> already tested </h2>';
+    echo '<h3>';
+    foreach($_SESSION['options']as $k => $v){
+    echo strtoupper($v).' ';
+    }
+    echo '</h3>';
+}
+
+?>
 <div class ="container">
     <div class ="socle">
         <div class="base"> </div>
@@ -327,41 +473,64 @@ if(isset($_POST["newgame"])||$_SESSION["erreur"] >6){
             ?>        
         </div>
     </div>
-
 </div>
 
 <?php
 // $_SESSION["words"]=["CRABE","CRAYON","ARAIGNEE","TOURNEVIS","OLIVE"];
 // $w = str_split($_SESSION["words"][array_rand($_SESSION["words"],1)]);
-$i = 0;
+
 
 echo "<div class='text'> ";
 
+
+/*
 foreach($_SESSION["Cword"] as $word){
     $_SESSION["display"][]="";
     $val = $_SESSION["display"][$i];
-    echo "<input maxlength = '1' type='text' name='1L' value=$val> </input>";
+    echo "<div class='divletter'>". $val."</div>";
     $i++;
 }
-echo "</div>";
+*/
 
+for($n = 0; $n<=isset($_SESSION["Cword"][$n]);$n++){
+$_SESSION["display"][]="";
+$val = $_SESSION["display"][$n];
+    if($_SESSION["display"][$n] == $val){
+        echo '<div class="divletter">'.$_SESSION["display"][$n].'</div>';
+    } else {
+        echo '<div class="divletter"></div>';
+    }
+}
+
+echo "</div>"; 
+
+
+
+//var_dump($_SESSION['Cword']);
+//var_dump($_SESSION['display']);
+//var_dump($m[$f]);
+
+/*
+echo $_SESSION["display"][0];
+echo $_SESSION["display"][1];
+echo $_SESSION["display"][2];
+echo $_SESSION["display"][3];
+echo $_SESSION["display"][4];
+echo $_SESSION["display"][5];
+*/
 ?>
-
-<!-- <div class='text'> 
-    <input type='text' name='1L' value= <?php echo $_SESSION["display"][0]?>>  </input> 
-    <input type='text' name='2L' value= <?php echo $_SESSION["display"][1]?>>  </input>   
-    <input type='text' name='3L' value= <?php echo $_SESSION["display"][2]?>>  </input>   
-    <input type='text' name='4L' value= <?php echo $_SESSION["display"][3]?>>  </input>   
-    <input type='text' name='5L' value= <?php echo $_SESSION["display"][4]?>>  </input>     
-</div> -->
 
 </div>
 
 <div class="memory">  <div class='newgame'> 
-    <form method ="post" action="memory.php">   
-        <input type='submit' value='MEMORY' name='newgame'> </input> 
+     <form method ="post" action="">   
+        <input type='submit' value='NEW GAME' name='newgame'> </input> 
     </form>   
-</div> </div>
 
+</div> </div>
+</main>
+<footer>
+
+</footer>
 </body>
 </html>
