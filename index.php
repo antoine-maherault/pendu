@@ -1,17 +1,18 @@
-
-<!DOCTYPE html>
-<html>
- <head>
- <title> Pendu </title>
- <meta name="viewport" content="width=device-width, initial-scale=0.5">
- <link rel="stylesheet" href="style.css">
- </head>
-
- <body>
- <main>
 <?php 
 
 session_start();
+
+?>
+<!DOCTYPE html>
+<html>
+ <head>
+ <title> pendu </title>
+ <meta name="viewport" content="width=device-width, initial-scale=0.5">
+ </head>
+ <link rel="stylesheet" type="text/css" href="style.css">
+ <body>
+    <main>
+<?php 
 
 if(isset($_SESSION['erreur'])){
    // echo $_SESSION['erreur']; don't do nothing
@@ -102,9 +103,14 @@ if(isset($_POST["newgame"])||$_SESSION["erreur"] >6){
 </div>
 <div class="game">
 <div class='newgame'>
-        <form method ="post">
-        <input type="text" name="letter" id ="letter" maxlength="1" >  </input> <!-- if we want to accept only alpha pattern="[A-Za-z]*" -->
-    </form>   
+<?php 
+
+if($_SESSION['erreur'] < 6){
+    //  if we want to accept only alpha pattern="[A-Za-z]*
+    echo  '<form method ="post"><input type="text" name="letter" id="letter" maxlength="1" >  </input> </form>';
+}
+
+?>
 </div>
 <?php 
 
@@ -155,6 +161,8 @@ if($k == ($cword + 1) and $_SESSION["erreur"]<6){
      echo '<form method ="post" action="">   
             <input type="submit" value="PLAY AGAIN" name="newgame" class="memory"> </input>
         </form></div> ';
+    echo '<style> #letter{ pointer-events:none; }</style> ';
+
 }
 
 // LETTERS ALREADY TRIED__________________________________________
@@ -168,6 +176,7 @@ if(isset($_POST['letter'])){
     }
     echo '</h3>';
 }
+
 
 ?>
 <div class ="container">
